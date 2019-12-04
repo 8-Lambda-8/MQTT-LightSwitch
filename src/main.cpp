@@ -1,20 +1,56 @@
 #include <Arduino.h>
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-uint8_t RelayPin1 = 2;
-uint8_t RelayPin2 = 0;
-uint8_t SwitchPin1 = 1;
-uint8_t SwitchPin2 = 3;
+uint8_t RelayPins[] = {2,0};
+uint8_t SwitchPins[] = {1,3};
+
+
+#include "wifiPasswd.h"
+const char* ssid;
+const char* password;
+const char* mqtt_server = "MQTT";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+long mill;
+
+void setup_wifi() {
+
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  pinMode(RelayPin1, OUTPUT);
-  pinMode(RelayPin2, OUTPUT);
-  pinMode(SwitchPin1, INPUT);
-  pinMode(SwitchPin2, INPUT);
+  
+  pinMode(RelayPins[0], OUTPUT);
+  pinMode(RelayPins[1], OUTPUT);
+  pinMode(SwitchPins[0], INPUT);
+  pinMode(SwitchPins[1
+], INPUT);
+
+  setup_wifi();
   
 }
 
