@@ -112,4 +112,10 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
 }
