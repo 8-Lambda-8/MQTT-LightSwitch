@@ -39,6 +39,19 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+void SwitchRelay(uint8_t x,boolean b){
+
+  Serial.print("switching Relay ");
+  Serial.print(x);
+  Serial.print(" on Pin ");
+  Serial.print(RelayPins[x]);
+  Serial.print(" to ");
+  Serial.println(b);
+
+  digitalWrite(RelayPins[x],!b); //invert because Relay is on when on GND
+
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
