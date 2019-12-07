@@ -14,6 +14,8 @@ PubSubClient client(espClient);
 
 long mill;
 
+String LightSwitchTopic = "/LightSwitch/0/";
+
 void setup_wifi() {
 
   delay(10);
@@ -63,13 +65,23 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   String topicStr = String(topic);
 
-  if(topicStr.substring(0,15) == "/LightSwitch/0/"){
+  if(topicStr.indexOf(LightSwitchTopic)>0){
+
+    Serial.println(topicStr.charAt(topicStr.length()));
     
-    SwitchRelay(topicStr.charAt(15)-'0',(char)payload[0]=='1');
+    SwitchRelay(topicStr.charAt(topicStr.length())-'0',(char)payload[0]=='1');
 
   }
   
 }
+
+char* str2ch(String command){
+    if(command.length()!=0){
+        char *p = const_cast<char*>(command.c_str());
+        return p;
+    }
+}
+
 
 void reconnect() {
   // Loop until we're reconnected
@@ -82,7 +94,8 @@ void reconnect() {
     if (client.connect(clientId.c_str(),"test1","test1")) {
       Serial.println("connected");
       
-      client.subscribe("/LightSwitch/0/#");
+      client.subscribe(str2ch(LightSwitchTopic+"#"));
+      
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -97,11 +110,10 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  
   pinMode(RelayPins[0], OUTPUT);
   pinMode(RelayPins[1], OUTPUT);
-  pinMode(SwitchPins[0], INPUT);
-  pinMode(SwitchPins[1], INPUT);
+  //pinMode(SwitchPins[0], INPUT);
+  //pinMode(SwitchPins[1], INPUT);
   SwitchRelay(0,false);
   SwitchRelay(1,false);
 
