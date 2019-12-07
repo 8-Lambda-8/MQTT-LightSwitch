@@ -57,7 +57,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
   String msg = "";
-  for (int i = 0; i < length; i++) {
+  for (uint16_t i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
     msg += (char)payload[i];
   }
@@ -66,7 +66,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   String topicStr = String(topic);
 
   if(topicStr.indexOf(LightSwitchTopic)>0){
-
+    Serial.println("if IndexOf");
     Serial.println(topicStr.charAt(topicStr.length()));
     
     SwitchRelay(topicStr.charAt(topicStr.length())-'0',(char)payload[0]=='1');
@@ -80,6 +80,7 @@ char* str2ch(String command){
         char *p = const_cast<char*>(command.c_str());
         return p;
     }
+    return "";
 }
 
 
@@ -120,13 +121,15 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+  client.publish(LightSwitchTopic+"IP",WiFi.localIP());
+  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
   if (!client.connected()) {
-    reconnect();
+    reconnect();    
   }
   client.loop();
 
