@@ -80,7 +80,7 @@ char* str2ch(String command){
         char *p = const_cast<char*>(command.c_str());
         return p;
     }
-    return "";
+    return const_cast<char*>("");
 }
 
 
@@ -121,7 +121,12 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  client.publish(LightSwitchTopic+"IP",WiFi.localIP());
+  while(!client.connected()) {
+    reconnect();    
+  }
+  Serial.println();
+  Serial.println("Publishing IP: "+WiFi.localIP().toString());
+  client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()));
   
 }
 
