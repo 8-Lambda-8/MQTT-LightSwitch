@@ -92,7 +92,7 @@ void reconnect() {
     String clientId = "ESP8266Client-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str(),"test1","test1")) {
+    if (client.connect(clientId.c_str(),"test1","test1",str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
       Serial.println("connected");
       
       client.subscribe(str2ch(LightSwitchTopic+"#"));
@@ -137,5 +137,10 @@ void loop() {
     reconnect();    
   }
   client.loop();
+
+  if((millis()-mill)>30000){
+    client.publish(str2ch(LightSwitchTopic+"Status"),str2ch("ONLINE"));
+    mill = millis();
+  }
 
 }
