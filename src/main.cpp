@@ -65,11 +65,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   String topicStr = String(topic);
 
-  if(topicStr.indexOf(LightSwitchTopic)>0){
-    Serial.println("if IndexOf");
-    Serial.println(topicStr.charAt(topicStr.length()));
+  if(topicStr.startsWith(LightSwitchTopic+"0")||topicStr.startsWith(LightSwitchTopic+"1")){
     
-    SwitchRelay(topicStr.charAt(topicStr.length())-'0',(char)payload[0]=='1');
+    Serial.println(topicStr.charAt(topicStr.length()-1));
+    
+    SwitchRelay(topicStr.charAt(topicStr.length()-1)-'0',(char)payload[0]=='1');
 
   }
   
@@ -94,7 +94,7 @@ void reconnect() {
     // Attempt to connect
     if (client.connect(clientId.c_str(),"test1","test1",str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
       Serial.println("connected");
-      
+
       client.subscribe(str2ch(LightSwitchTopic+"#"));
       
     } else {
