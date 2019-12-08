@@ -150,7 +150,7 @@ void loop() {
   for (uint8_t i = 0; i < 2; i++)
   {
     if(LastSwitchState[i] != digitalRead(SwitchPins[i])){
-      if(digitalRead(SwitchPins[i]))
+      if(digitalRead(RelayPins[i]))
       {
         client.publish(str2ch(LightSwitchTopic+i),"1",true);
       }else
