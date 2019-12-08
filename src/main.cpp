@@ -126,7 +126,7 @@ void setup() {
   }
   Serial.println();
   Serial.println("Publishing IP: "+WiFi.localIP().toString());
-  client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()));
+  client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()),true);
   
 }
 
@@ -139,7 +139,7 @@ void loop() {
   client.loop();
 
   if((millis()-mill)>30000){
-    client.publish(str2ch(LightSwitchTopic+"Status"),str2ch("ONLINE"));
+    client.publish(str2ch(LightSwitchTopic+"Status"),str2ch("ONLINE"),true);
     mill = millis();
   }
 
