@@ -6,6 +6,7 @@ uint8_t RelayPins[] = {2,0};
 uint8_t SwitchPins[] = {1,3};
 bool LastSwitchState[2];
 
+#include "mqttPwd.h"
 
 #include "wifiPasswd.h"
 const char* mqtt_server = "MQTT";
@@ -93,7 +94,7 @@ void reconnect() {
     String clientId = "ESP8266Client-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str(),"test1","test1",str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
+    if (client.connect(clientId.c_str(),mqtt_user,mqtt_pwd,str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
       Serial.println("connected");
 
       client.subscribe(str2ch(LightSwitchTopic+"#"));
