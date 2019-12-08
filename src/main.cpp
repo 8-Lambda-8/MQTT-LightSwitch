@@ -4,6 +4,7 @@
 
 uint8_t RelayPins[] = {2,0};
 uint8_t SwitchPins[] = {1,3};
+bool LastSwitchState[2];
 
 
 #include "wifiPasswd.h"
@@ -113,10 +114,13 @@ void setup() {
 
   pinMode(RelayPins[0], OUTPUT);
   pinMode(RelayPins[1], OUTPUT);
-  //pinMode(SwitchPins[0], INPUT);
-  //pinMode(SwitchPins[1], INPUT);
+  pinMode(SwitchPins[0], INPUT);
+  pinMode(SwitchPins[1], INPUT);
   SwitchRelay(0,false);
   SwitchRelay(1,false);
+
+  LastSwitchState[0] = digitalRead(SwitchPins[0]);
+  LastSwitchState[1] = digitalRead(SwitchPins[1]);
 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -141,6 +145,24 @@ void loop() {
   if((millis()-mill)>30000){
     client.publish(str2ch(LightSwitchTopic+"Status"),str2ch("ONLINE"),true);
     mill = millis();
+  }
+
+  for (uint8_t i = 0; i < 2; i++)
+  {
+    if(LastSwitchState[i] != digitalRead(SwitchPins[i])){
+      if(digitalRead(SwitchPins[i]))
+      {
+        client.publish(str2ch(LightSwitchTopic+i),"1",true);
+      }else
+      {
+        client.publish(str2ch(LightSwitchTopic+i),"0",true);
+      }
+      LastSwitchState[i] = !LastSwitchState[i];
+    }
+  }
+  if((millis()-mill)>500){
+    digitalRead(SwitchPins[0]);
+    digitalRead(SwitchPins[1]);
   }
 
 }
