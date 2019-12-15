@@ -119,8 +119,8 @@ void setup() {
 
   pinMode(RelayPins[0], OUTPUT);
   pinMode(RelayPins[1], OUTPUT);
-  //pinMode(SwitchPins[0], INPUT);
-  //pinMode(SwitchPins[1], INPUT);
+  pinMode(SwitchPins[0], INPUT);
+  pinMode(SwitchPins[1], INPUT);
   SwitchRelay(0,false);
   SwitchRelay(1,false);
 
@@ -140,10 +140,12 @@ void loop() {
 
   if ((millis()-wifiConnectMillis)>10000) {
     setup_wifi();
+    wifiConnectMillis = millis();
   }
 
   if ((millis()-mqttConnectMillis)>5000) {
-    reconnect();    
+    reconnect();
+    mqttConnectMillis = millis(); 
   }
 
   client.loop();
@@ -170,7 +172,6 @@ void loop() {
       }else{//not connected:
         SwitchRelay(i,digitalRead(RelayPins[i]));
       }     
-
 
       LastSwitchState[i] = !LastSwitchState[i];
     }
