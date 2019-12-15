@@ -173,9 +173,5 @@ void loop() {
       LastSwitchState[i] = !LastSwitchState[i];
     }
   }
-  if((millis()-mill)>500){
-    digitalRead(SwitchPins[0]);
-    digitalRead(SwitchPins[1]);
-  }
-
+  
 }
