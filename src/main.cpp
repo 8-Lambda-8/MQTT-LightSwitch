@@ -9,7 +9,7 @@ bool LastSwitchState[2];
 #include "mqttPwd.h"
 
 #include "wifiPasswd.h"
-const char* mqtt_server = "MQTT";
+const char* mqtt_server = "10.0.0.38";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -136,11 +136,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (!client.connected() && (millis()-wifiConnectMillis)>10000) {
+  if (WiFi.status() != WL_CONNECTED && (millis()-wifiConnectMillis)>10000) {
     setup_wifi();
   }
 
-  if (!client.connected() && (millis()-mqttConnectMillis)>5000) {
+  if (WiFi.status() == WL_CONNECTED && !client.connected() && (millis()-mqttConnectMillis)>5000) {
     reconnect();    
   }
 
