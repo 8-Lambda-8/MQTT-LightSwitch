@@ -14,7 +14,7 @@ const char* mqtt_server = "MQTT";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-long mill, mqttConnectMillis;
+long mill, mqttConnectMillis, wifiConnectMillis;
 
 String LightSwitchTopic = "/LightSwitch/0/";
 
@@ -28,10 +28,10 @@ void setup_wifi() {
 
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  /*while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-  }
+  }*/
 
   randomSeed(micros());
 
@@ -136,9 +136,14 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
+  if (!client.connected() && (millis()-wifiConnectMillis)>10000) {
+    setup_wifi();
+  }
+
   if (!client.connected() && (millis()-mqttConnectMillis)>5000) {
     reconnect();    
   }
+
   client.loop();
 
   if((millis()-mill)>30000){
