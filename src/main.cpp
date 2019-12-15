@@ -19,26 +19,28 @@ long mill, mqttConnectMillis, wifiConnectMillis;
 String LightSwitchTopic = "/LightSwitch/0/";
 
 void setup_wifi() {
+  if(WiFi.status() != WL_CONNECTED){
+    delay(10);
+    // We start by connecting to a WiFi network
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
 
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+    WiFi.begin(ssid, password);
 
-  WiFi.begin(ssid, password);
-
-  /*while (WiFi.status() != WL_CONNECTED) {
+    /*while (WiFi.status() != WL_CONNECTED) {
+      
+      Serial.print(".");
+    }*/
     delay(500);
-    Serial.print(".");
-  }*/
-
-  randomSeed(micros());
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+    randomSeed(micros());
+  }
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
 }
 
 void SwitchRelay(uint8_t x,boolean b){
@@ -88,7 +90,7 @@ char* str2ch(String command){
 
 void reconnect() {
   // Loop until we're reconnected
-  if (!client.connected()) {
+  if (WiFi.status() == WL_CONNECTED && !client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "ESP8266Client-";
@@ -136,11 +138,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (WiFi.status() != WL_CONNECTED && (millis()-wifiConnectMillis)>10000) {
+  if ((millis()-wifiConnectMillis)>10000) {
     setup_wifi();
   }
 
-  if (WiFi.status() == WL_CONNECTED && !client.connected() && (millis()-mqttConnectMillis)>5000) {
+  if ((millis()-mqttConnectMillis)>5000) {
     reconnect();    
   }
 
