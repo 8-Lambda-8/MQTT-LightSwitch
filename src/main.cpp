@@ -117,8 +117,8 @@ void setup() {
 
   pinMode(RelayPins[0], OUTPUT);
   pinMode(RelayPins[1], OUTPUT);
-  pinMode(SwitchPins[0], INPUT);
-  pinMode(SwitchPins[1], INPUT);
+  //pinMode(SwitchPins[0], INPUT);
+  //pinMode(SwitchPins[1], INPUT);
   SwitchRelay(0,false);
   SwitchRelay(1,false);
 
@@ -154,13 +154,22 @@ void loop() {
   for (uint8_t i = 0; i < 2; i++)
   {
     if(LastSwitchState[i] != digitalRead(SwitchPins[i])){
-      if(digitalRead(RelayPins[i]))
-      {
-        client.publish(str2ch(LightSwitchTopic+i),"1",true);
-      }else
-      {
-        client.publish(str2ch(LightSwitchTopic+i),"0",true);
-      }
+      
+      if(WiFi.status() == WL_CONNECTED && client.connected()){
+
+        if(digitalRead(RelayPins[i]))
+        {
+          client.publish(str2ch(LightSwitchTopic+i),"1",true);
+        }else
+        {
+          client.publish(str2ch(LightSwitchTopic+i),"0",true);
+        }
+
+      }else{//not connected:
+        SwitchRelay(i,digitalRead(RelayPins[i]));
+      }     
+
+
       LastSwitchState[i] = !LastSwitchState[i];
     }
   }
