@@ -14,7 +14,7 @@ const char* mqtt_server = "MQTT";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-long mill;
+long mill, mqttConnectMillis;
 
 String LightSwitchTopic = "/LightSwitch/0/";
 
@@ -88,7 +88,7 @@ char* str2ch(String command){
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  if (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "ESP8266Client-";
@@ -98,13 +98,15 @@ void reconnect() {
       Serial.println("connected");
 
       client.subscribe(str2ch(LightSwitchTopic+"#"));
+
+      Serial.println("Publishing IP: "+WiFi.localIP().toString());
+      client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()),true);
       
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
     }
   }
 }
@@ -126,19 +128,15 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  while(!client.connected()) {
-    reconnect();    
-  }
-  Serial.println();
-  Serial.println("Publishing IP: "+WiFi.localIP().toString());
-  client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()),true);
+  
+  reconnect();    
   
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (!client.connected()) {
+  if (!client.connected() && (millis()-mqttConnectMillis)>5000) {
     reconnect();    
   }
   client.loop();
