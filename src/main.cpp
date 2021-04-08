@@ -1,47 +1,36 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
+#include <WiFiManager.h>
+
 
 uint8_t RelayPins[] = {2,0};
 uint8_t SwitchPins[] = {1,3};
+//uint8_t RelayPins[] = {9,10};
+//uint8_t SwitchPins[] = {7,8};
 bool LastSwitchState[2];
 
-#include "mqttPwd.h"
+//#include "mqttPwd.h"
 
-#include "wifiPasswd.h"
-const char* mqtt_server = "10.0.0.38";
+//#include "wifiPasswd.h"
+
+const char* mqtt_user = "LightSwitch2";
+const char* mqtt_pwd = "LightSwitch2";
+const char* mqtt_server = "10.0.1.20";
+
+const String id = "1";
+const String host = "LightSwitch_"+id;
+
+const char* version = __DATE__ " / " __TIME__;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 long mill, mqttConnectMillis, wifiConnectMillis;
 
-String LightSwitchTopic = "/LightSwitch/0/";
-
-void setup_wifi() {
-  if(WiFi.status() != WL_CONNECTED){
-    delay(10);
-    // We start by connecting to a WiFi network
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-
-    WiFi.begin(ssid, password);
-
-    /*while (WiFi.status() != WL_CONNECTED) {
-      
-      Serial.print(".");
-    }*/
-    delay(500);
-    randomSeed(micros());
-  }
-  if(WiFi.status() == WL_CONNECTED){
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-  }
-}
+String LightSwitchTopic = "/LightSwitch/"+id+"/";
 
 void SwitchRelay(uint8_t x,boolean b){
 
@@ -93,16 +82,17 @@ void reconnect() {
   if (WiFi.status() == WL_CONNECTED && !client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
+    String clientId = host;
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str(),mqtt_user,mqtt_pwd,str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
+    if(client.connect(clientId.c_str(), mqtt_user,mqtt_pwd,str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
       Serial.println("connected");
 
       client.subscribe(str2ch(LightSwitchTopic+"#"));
 
       Serial.println("Publishing IP: "+WiFi.localIP().toString());
       client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()),true);
+      client.publish(str2ch(LightSwitchTopic + "Version"), version, true);
       
     } else {
       Serial.print("failed, rc=");
@@ -127,21 +117,27 @@ void setup() {
   LastSwitchState[0] = digitalRead(SwitchPins[0]);
   LastSwitchState[1] = digitalRead(SwitchPins[1]);
 
-  setup_wifi();
+  WiFiManager wifiManager;
+  WiFi.hostname(host);
+  wifiManager.setAPStaticIPConfig(IPAddress(10, 0, 0, 1),
+                                  IPAddress(10, 0, 0, 1),
+                                  IPAddress(255, 255, 255, 0));
+  wifiManager.autoConnect(str2ch(host));
+
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   
-  reconnect();    
+  MDNS.begin(host);
+  MDNS.addService("http", "tcp", 80);
+
+  ArduinoOTA.begin();
   
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if ((millis()-wifiConnectMillis)>10000) {
-    setup_wifi();
-    wifiConnectMillis = millis();
-  }
+  ArduinoOTA.handle();
 
   if ((millis()-mqttConnectMillis)>5000) {
     reconnect();
@@ -171,10 +167,10 @@ void loop() {
 
       }else{//not connected:
         SwitchRelay(i,digitalRead(RelayPins[i]));
-      }     
+      }
 
       LastSwitchState[i] = !LastSwitchState[i];
     }
   }
-  
+  delay(2);
 }
