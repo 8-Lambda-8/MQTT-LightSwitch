@@ -1,27 +1,24 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include <ArduinoOTA.h>
+#include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <PubSubClient.h>
 #include <WiFiManager.h>
 
-
-uint8_t RelayPins[] = {2,0};
-uint8_t SwitchPins[] = {1,3};
-//uint8_t RelayPins[] = {9,10};
-//uint8_t SwitchPins[] = {7,8};
-bool LastSwitchState[2];
+uint8_t RelayPins[] = {2, 0};
+uint8_t SwitchPins[] = {1, 3};
+bool LastSwitchState[sizeof(RelayPins)];
 
 //#include "mqttPwd.h"
 
 //#include "wifiPasswd.h"
 
-const char* mqtt_user = "LightSwitch2";
-const char* mqtt_pwd = "LightSwitch2";
-const char* mqtt_server = "10.0.1.20";
+const char* mqtt_user = "LightSwitch";
+const char* mqtt_pwd = "LightSwitch";
+const char* mqtt_server = "ServerPi";
 
-const String id = "1";
-const String host = "LightSwitch_"+id;
+const String id = "2";
+const String host = "LightSwitch_" + id;
 
 const char* version = __DATE__ " / " __TIME__;
 
@@ -30,10 +27,9 @@ PubSubClient client(espClient);
 
 long mill, mqttConnectMillis, wifiConnectMillis;
 
-String LightSwitchTopic = "/LightSwitch/"+id+"/";
+String LightSwitchTopic = "/LightSwitch/" + id + "/";
 
-void SwitchRelay(uint8_t x,boolean b){
-
+void SwitchRelay(uint8_t x, boolean b) {
   Serial.print("switching Relay ");
   Serial.print(x);
   Serial.print(" on Pin ");
@@ -41,8 +37,7 @@ void SwitchRelay(uint8_t x,boolean b){
   Serial.print(" to ");
   Serial.println(b);
 
-  digitalWrite(RelayPins[x],!b); //invert because Relay is on when on GND
-
+  digitalWrite(RelayPins[x], !b);  // invert because Relay is on when on GND
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -58,24 +53,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   String topicStr = String(topic);
 
-  if(topicStr.startsWith(LightSwitchTopic+"0")||topicStr.startsWith(LightSwitchTopic+"1")){
-    
-    Serial.println(topicStr.charAt(topicStr.length()-1));
-    
-    SwitchRelay(topicStr.charAt(topicStr.length()-1)-'0',(char)payload[0]=='1');
+  if (topicStr.startsWith(LightSwitchTopic)) {
+    topicStr.replace(LightSwitchTopic, "");
 
-  }
-  
-}
+    if (topicStr.length() == 1) {
+      Serial.println(topicStr.charAt(topicStr.length() - 1));
 
-char* str2ch(String command){
-    if(command.length()!=0){
-        char *p = const_cast<char*>(command.c_str());
-        return p;
+      SwitchRelay(topicStr.charAt(topicStr.length() - 1) - '0',
+                  (char)payload[0] == '1');
     }
-    return const_cast<char*>("");
+  }
 }
 
+char* str2ch(String command) {
+  if (command.length() != 0) {
+    char* p = const_cast<char*>(command.c_str());
+    return p;
+  }
+  return const_cast<char*>("");
+}
 
 void reconnect() {
   // Loop until we're reconnected
@@ -85,15 +81,18 @@ void reconnect() {
     String clientId = host;
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if(client.connect(clientId.c_str(), mqtt_user,mqtt_pwd,str2ch(LightSwitchTopic+"Status"),0,true,str2ch("OFFLINE"))) {
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pwd,
+                       str2ch(LightSwitchTopic + "Status"), 0, true,
+                       str2ch("OFFLINE"))) {
       Serial.println("connected");
 
-      client.subscribe(str2ch(LightSwitchTopic+"#"));
+      client.subscribe(str2ch(LightSwitchTopic + "#"));
 
-      Serial.println("Publishing IP: "+WiFi.localIP().toString());
-      client.publish(str2ch(LightSwitchTopic+"IP"),str2ch(WiFi.localIP().toString()),true);
+      Serial.println("Publishing IP: " + WiFi.localIP().toString());
+      client.publish(str2ch(LightSwitchTopic + "IP"),
+                     str2ch(WiFi.localIP().toString()), true);
       client.publish(str2ch(LightSwitchTopic + "Version"), version, true);
-      
+
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -107,15 +106,13 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  pinMode(RelayPins[0], OUTPUT);
-  pinMode(RelayPins[1], OUTPUT);
-  pinMode(SwitchPins[0], INPUT);
-  pinMode(SwitchPins[1], INPUT);
-  SwitchRelay(0,false);
-  SwitchRelay(1,false);
+  for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
+    pinMode(RelayPins[i], OUTPUT);
+    pinMode(SwitchPins[i], INPUT);
 
-  LastSwitchState[0] = digitalRead(SwitchPins[0]);
-  LastSwitchState[1] = digitalRead(SwitchPins[1]);
+    SwitchRelay(i, false);
+    LastSwitchState[i] = digitalRead(SwitchPins[i]);
+  }
 
   WiFiManager wifiManager;
   WiFi.hostname(host);
@@ -126,12 +123,11 @@ void setup() {
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  
+
   MDNS.begin(host);
   MDNS.addService("http", "tcp", 80);
 
   ArduinoOTA.begin();
-  
 }
 
 void loop() {
@@ -139,34 +135,29 @@ void loop() {
 
   ArduinoOTA.handle();
 
-  if ((millis()-mqttConnectMillis)>5000) {
+  if ((millis() - mqttConnectMillis) > 5000) {
     reconnect();
-    mqttConnectMillis = millis(); 
+    mqttConnectMillis = millis();
   }
 
   client.loop();
 
-  if((millis()-mill)>30000){
-    client.publish(str2ch(LightSwitchTopic+"Status"),str2ch("ONLINE"),true);
+  if ((millis() - mill) > 30000) {
+    client.publish(str2ch(LightSwitchTopic + "Status"), str2ch("ONLINE"), true);
     mill = millis();
   }
 
-  for (uint8_t i = 0; i < 2; i++)
-  {
-    if(LastSwitchState[i] != digitalRead(SwitchPins[i])){
-      
-      if(WiFi.status() == WL_CONNECTED && client.connected()){
-
-        if(digitalRead(RelayPins[i]))
-        {
-          client.publish(str2ch(LightSwitchTopic+i),"1",true);
-        }else
-        {
-          client.publish(str2ch(LightSwitchTopic+i),"0",true);
+  for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
+    if (LastSwitchState[i] != digitalRead(SwitchPins[i])) {
+      if (WiFi.status() == WL_CONNECTED && client.connected()) {
+        if (digitalRead(RelayPins[i])) {
+          client.publish(str2ch(LightSwitchTopic + i), "1", true);
+        } else {
+          client.publish(str2ch(LightSwitchTopic + i), "0", true);
         }
 
-      }else{//not connected:
-        SwitchRelay(i,digitalRead(RelayPins[i]));
+      } else {  // not connected:
+        SwitchRelay(i, digitalRead(RelayPins[i]));
       }
 
       LastSwitchState[i] = !LastSwitchState[i];
