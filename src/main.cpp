@@ -15,9 +15,9 @@ bool LastSwitchState[sizeof(RelayPins)];
 
 const char* mqtt_user = "LightSwitch";
 const char* mqtt_pwd = "LightSwitch";
-const char* mqtt_server = "ServerPi";
+const char* mqtt_server = "PiServer";
 
-const String id = "2";
+const String id = "0";
 const String host = "LightSwitch_" + id;
 
 const char* version = __DATE__ " / " __TIME__;
