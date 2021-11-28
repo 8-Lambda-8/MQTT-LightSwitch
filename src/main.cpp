@@ -17,7 +17,8 @@ const String id = "0";
 const String LightSwitchTopic = "/LightSwitch/" + id + '/';
 const String host = "LightSwitch_" + id;
 
-const char* version = __DATE__ " / " __TIME__;
+#include "version.h"
+const char* version = __DATE__ " / " __TIME__ " / " __gitVersion__;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
