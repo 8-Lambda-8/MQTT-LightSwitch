@@ -139,6 +139,8 @@ void setup() {
   Serial.println("end Setup");
 }
 
+uint32_t loops = 0;
+
 void loop() {
   // put your main code here, to run repeatedly:
 
@@ -152,6 +154,8 @@ void loop() {
   if ((millis() - mqttConnectMillis) > 5000) {
     reconnect();
     mqttConnectMillis = millis();
+    Serial.printf("Loops: %d/s\n",loops/5);
+    loops = 0;
   }
 
   client.loop();
@@ -178,4 +182,5 @@ void loop() {
     }
   }
   delay(2);
+  loops++;
 }
