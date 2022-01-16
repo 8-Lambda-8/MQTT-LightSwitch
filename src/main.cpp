@@ -11,9 +11,9 @@ bool LastSwitchState[sizeof(RelayPins)];
 #include "mqttPwd.h"
 #include "wifiPasswd.h"
 
-long mill, mqttConnectMillis, wifiConnectMillis;
+uint32_t mill, mqttConnectMillis, wifiConnectMillis;
 
-const String id = "0";
+const String id = "1";
 const String LightSwitchTopic = "/LightSwitch/" + id + '/';
 const String host = "LightSwitch_" + id;
 
@@ -118,7 +118,7 @@ void reconnect() {
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(74880);
+  //Serial.begin(74880);
   Serial.println("begin Setup");
 
   for (uint8_t i = 0; i < sizeof(RelayPins); i++) {
@@ -178,7 +178,7 @@ void loop() {
         SwitchRelay(i, digitalRead(RelayPins[i]));
       }
 
-      LastSwitchState[i] = !LastSwitchState[i];
+      LastSwitchState[i] = digitalRead(SwitchPins[i]);
     }
   }
   delay(2);
