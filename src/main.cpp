@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include <ArduinoOTA.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+#include <lambdaWifi.h>
 #include <PubSubClient.h>
 
 uint8_t RelayPins[] = {2, 0};
@@ -57,36 +55,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-char* str2ch(String command) {
-  if (command.length() != 0) {
-    char* p = const_cast<char*>(command.c_str());
-    return p;
-  }
-  return const_cast<char*>("");
-}
-
-void setup_wifi() {
-  if (WiFi.status() != WL_CONNECTED) {
-    delay(10);
-    // We start by connecting to a WiFi network
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-
-    WiFi.setHostname(str2ch(host));
-    WiFi.begin(ssid, password);
-
-    delay(500);
-    randomSeed(micros());
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("");
-      Serial.println("WiFi connected");
-      Serial.println("IP address: ");
-      Serial.println(WiFi.localIP());
-    }
-  }
-}
-
 void reconnect() {
   // Loop until we're reconnected
   if (WiFi.status() == WL_CONNECTED && !client.connected()) {
@@ -128,7 +96,7 @@ void setup() {
     SwitchRelay(i, false);
   }
 
-  setup_wifi();  
+  setup_wifi(ssid, password, str2ch(host));
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
@@ -147,7 +115,7 @@ void loop() {
   ArduinoOTA.handle();
 
   if ((millis() - wifiConnectMillis) > 10000) {
-    setup_wifi();
+    setup_wifi(ssid, password, str2ch(host));
     wifiConnectMillis = millis();
   }
 
